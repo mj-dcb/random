@@ -15,6 +15,10 @@ contract DepositContract {
     mapping (address => uint256) public depositLimit;
     mapping (address => uint256) public deposits;
 
+    // Events
+    event Deposit(address indexed user, uint256 amount);
+    event Withdrawal(address indexed user, uint256 amount);
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
@@ -32,6 +36,11 @@ contract DepositContract {
     function addToWhitelist(address _address, uint256 _limit) public onlyOwner {
         whitelist[_address] = true;
         depositLimit[_address] = _limit;
+    }
+
+    function editDepositLimit(address _address, uint256 _newLimit) public onlyOwner {
+        require(whitelist[_address], "Address is not whitelisted");
+        depositLimit[_address] = _newLimit;
     }
 
     function addBatchToWhitelist(address[] memory _addresses, uint256[] memory _limits) public onlyOwner {
@@ -55,6 +64,18 @@ contract DepositContract {
 
         // Ensure the tokens get transferred here
         require(token.transferFrom(msg.sender, address(this), _amount), "Token transfer failed");
+
+        emit Deposit(msg.sender, _amount);
+    }
+
+    function withdraw(uint256 _amount) public onlyOwner {
+        uint256 contractBalance = token.balanceOf(address(this));
+        require(_amount <= contractBalance, "Not enough tokens in the contract");
+
+        // Transfer the tokens to the owner
+        require(token.transfer(owner, _amount), "Token transfer failed");
+
+        emit Withdrawal(owner, _amount);
     }
 
     function getDepositedAmount(address _address) public view returns (uint256) {
