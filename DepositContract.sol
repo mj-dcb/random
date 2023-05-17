@@ -34,6 +34,14 @@ contract DepositContract {
         depositLimit[_address] = _limit;
     }
 
+    function addBatchToWhitelist(address[] memory _addresses, uint256[] memory _limits) public onlyOwner {
+        require(_addresses.length == _limits.length, "Addresses and limits arrays must have the same length");
+
+        for (uint i = 0; i < _addresses.length; i++) {
+            addToWhitelist(_addresses[i], _limits[i]);
+        }
+    }
+
     function removeFromWhitelist(address _address) public onlyOwner {
         whitelist[_address] = false;
     }
